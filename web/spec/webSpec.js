@@ -2,8 +2,20 @@ const React = require("react")
 const ReactDOM = require("react-dom")
 
 class PlayForm extends React.Component {
-    render(){
-        return <button>Hello Test</button>
+    constructor() {
+        super()
+        this.state = {}
+    }
+
+    submitForm() {
+        this.setState({message: "INVALID"})
+    }
+
+    render() {
+        return <div>
+            {this.state.message}
+            <button onClick={this.submitForm.bind(this)}>PLAY</button>
+        </div>
     }
 }
 
@@ -15,7 +27,7 @@ describe("Play Form", function () {
             document.body.appendChild(domFixture)
 
             let alwaysInvalidRequest = {
-                play: function(p1, p2, observer){
+                play: function (p1, p2, observer) {
                     observer.invalid()
                 }
             }
@@ -25,6 +37,7 @@ describe("Play Form", function () {
                 domFixture
             )
 
+            expect(domFixture.innerText).not.toContain("INVALID")
             document.querySelector("button").click()
             expect(domFixture.innerText).toContain("INVALID")
         })
