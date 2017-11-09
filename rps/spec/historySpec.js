@@ -12,15 +12,11 @@ describe("history", function () {
         })
     })
 
-    describe("when rounds have been played", function () {
+    fdescribe("when rounds have been played", function () {
         it("then it sends the rounds to the observer", function () {
             let requests = new Requests()
             let playRoundObserver = jasmine.createSpyObj("playRoundObserver", ["invalid"])
-            let repo = {
-                isEmpty(){},
-                findAll(){},
-                save(){}
-            }
+            let repo = new FakeRoundRepo()
 
             let observer = jasmine.createSpyObj("observer", ["rounds"])
 
@@ -37,26 +33,51 @@ describe("history", function () {
 })
 
 function FakeRoundRepo(){
+    let rounds = []
 
+    this.isEmpty = function(){
+        return rounds.length === 0
+    }
+
+    this.save = function(round){
+        rounds.push(round)
+    }
+
+    this.findAll= function(){
+        return rounds
+    }
 }
 
-fdescribe("round repo", function () {
-    describe("when no rounds have been saved", function () {
-        it("is empty", function () {
-            expect(new FakeRoundRepo().isEmpty()).toBe(true)
+function roundRepoContract(RoundRepoClass){
+    fdescribe("round repo", function () {
+        let repo
+
+        beforeEach(function () {
+            repo = new RoundRepoClass()
+        })
+
+        describe("when no rounds have been saved", function () {
+            it("is empty", function () {
+                expect(repo.isEmpty()).toBe(true)
+            })
+        })
+
+        describe("when rounds have been saved", function () {
+            it("is not empty", function () {
+                repo.save(new Round())
+                expect(repo.isEmpty()).toBe(false)
+            })
+
+            it("returns the rounds that have been saved", function () {
+                let round = new Round()
+                repo.save(round)
+                expect(repo.findAll()).toEqual([round])
+            })
         })
     })
+}
 
-    describe("when rounds have been saved", function () {
-        it("is not empty", function () {
-
-        })
-
-        it("returns the rounds that have been saved", function () {
-
-        })
-    })
-})
+roundRepoContract(FakeRoundRepo)
 
 
 
