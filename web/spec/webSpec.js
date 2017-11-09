@@ -1,6 +1,64 @@
 const React = require("react")
 const ReactDOM = require("react-dom")
 const ReactTestUtils = require("react-dom/test-utils")
+const {Round} = require("rps")
+
+class App extends React.Component {
+    render(){
+        return <div>
+            <PlayForm requests={this.props.requests}/>
+            <History requests={this.props.requests}/>
+        </div>
+    }
+}
+
+class History extends React.Component {
+    constructor(){
+        super()
+        this.state = {}
+    }
+
+    componentDidMount(){
+        this.props.requests.getHistory(this)
+    }
+
+    rounds(rs){
+        this.setState({display: <Rounds rounds={rs}/>})
+    }
+
+    noRounds(){
+        this.setState({display: <NoRounds/>})
+    }
+
+    render(){
+        return <div>
+            {this.state.display}
+        </div>
+    }
+}
+
+class Rounds extends React.Component {
+    render(){
+        return <ul>
+            {this.props.rounds.map(round =>
+                <li>{round.p1Throw} {round.p2Throw} {this.translate(round.result)}</li>
+            )}
+        </ul>
+    }
+
+    translate(result){
+        return {
+            "invalid": "INVALID"
+        }[result]
+    }
+
+}
+
+class NoRounds extends React.Component {
+    render(){
+        return <h1>NO ROUNDS</h1>
+    }
+}
 
 class PlayForm extends React.Component {
     constructor() {
@@ -43,86 +101,103 @@ class PlayForm extends React.Component {
 }
 
 
-describe("Play Form", function () {
-    describe("when the request is processed as 'invalid'", function () {
-        beforeEach(function () {
-            let alwaysInvalidRequest = {
-                play: (p1, p2, observer) => observer.invalid()
-            }
-            renderApp(alwaysInvalidRequest)
+describe("Web App", function () {
+    describe("Play Form", function () {
+        describe("when the request is processed as 'invalid'", function () {
+            beforeEach(function () {
+                let alwaysInvalidRequest = {
+                    play: (p1, p2, observer) => observer.invalid()
+                }
+                renderApp(alwaysInvalidRequest)
+            })
+
+            it("should display INVALID", function () {
+                expect(page()).not.toContain("INVALID")
+                submitPlayForm()
+                expect(page()).toContain("INVALID")
+            })
         })
 
-        it("should display INVALID", function () {
-            expect(page()).not.toContain("INVALID")
+        describe("when the request is processed as 'tie'", function () {
+            beforeEach(function () {
+                let alwaysTieRequest = {
+                    play: (p1, p2, observer) => observer.tie()
+                }
+                renderApp(alwaysTieRequest)
+            })
+
+            it("should display TIE", function () {
+                expect(page()).not.toContain("TIE")
+                submitPlayForm()
+                expect(page()).toContain("TIE")
+            })
+        })
+
+        describe("when the request is processed as 'p1Wins'", function () {
+            beforeEach(function () {
+                let alwaysP1WinsRequest = {
+                    play: (p1, p2, observer) => observer.p1Wins()
+                }
+                renderApp(alwaysP1WinsRequest)
+            })
+
+            it("should display P1 Wins!", function () {
+                expect(page()).not.toContain("P1 Wins!")
+                submitPlayForm()
+                expect(page()).toContain("P1 Wins!")
+            })
+        })
+
+        describe("when the request is processed as 'p2Wins'", function () {
+            beforeEach(function () {
+                let alwaysP2WinsRequest = {
+                    play: (p1, p2, observer) => observer.p2Wins()
+                }
+                renderApp(alwaysP2WinsRequest)
+            })
+
+            it("should display P2 Wins!", function () {
+                expect(page()).not.toContain("P2 Wins!")
+                submitPlayForm()
+                expect(page()).toContain("P2 Wins!")
+            })
+        })
+
+        it("sends the user's input to the play request", function () {
+            let playSpy = jasmine.createSpy("playSpy")
+
+            renderApp({play: playSpy})
+
+            changeInput("p1Throw", "foo")
+            changeInput("p2Throw", "bar")
+
             submitPlayForm()
+            expect(playSpy).toHaveBeenCalledWith("foo", "bar", jasmine.any(Object))
+        })
+
+    })
+
+    describe("when no rounds have been played", function () {
+        beforeEach(function () {
+            renderApp({getHistory: (observer) => observer.noRounds()})
+        })
+
+        it("displays 'NO ROUNDS'", function () {
+            expect(page()).toContain("NO ROUNDS")
+        })
+    })
+
+    describe("when an invalid round has been played", function () {
+        beforeEach(function () {
+            renderApp({getHistory: (observer) => observer.rounds([new Round("foo", "bar", "invalid")])})
+        })
+
+        it("displays the round details", function () {
+            expect(page()).toContain("foo")
+            expect(page()).toContain("bar")
             expect(page()).toContain("INVALID")
         })
     })
-
-    describe("when the request is processed as 'tie'", function () {
-        beforeEach(function () {
-            let alwaysTieRequest = {
-                play: (p1, p2, observer) => observer.tie()
-            }
-            renderApp(alwaysTieRequest)
-        })
-
-        it("should display TIE", function () {
-            expect(page()).not.toContain("TIE")
-            submitPlayForm()
-            expect(page()).toContain("TIE")
-        })
-    })
-
-    describe("when the request is processed as 'p1Wins'", function () {
-        beforeEach(function () {
-            let alwaysP1WinsRequest = {
-                play: (p1, p2, observer) => observer.p1Wins()
-            }
-            renderApp(alwaysP1WinsRequest)
-        })
-
-        it("should display P1 Wins!", function () {
-            expect(page()).not.toContain("P1 Wins!")
-            submitPlayForm()
-            expect(page()).toContain("P1 Wins!")
-        })
-    })
-
-    describe("when the request is processed as 'p2Wins'", function () {
-        beforeEach(function () {
-            let alwaysP2WinsRequest = {
-                play: (p1, p2, observer) => observer.p2Wins()
-            }
-            renderApp(alwaysP2WinsRequest)
-        })
-
-        it("should display P2 Wins!", function () {
-            expect(page()).not.toContain("P2 Wins!")
-            submitPlayForm()
-            expect(page()).toContain("P2 Wins!")
-        })
-    })
-
-    function changeInput(name, value) {
-        let input = document.querySelector(`[name='${name}']`)
-        input.value = value
-        ReactTestUtils.Simulate.change(input)
-
-    }
-
-    it("sends the user's input to the play request", function () {
-        let playSpy = jasmine.createSpy("playSpy")
-
-        renderApp({play: playSpy})
-
-        changeInput("p1Throw", "foo")
-        changeInput("p2Throw", "bar")
-
-        submitPlayForm()
-        expect(playSpy).toHaveBeenCalledWith("foo", "bar", jasmine.any(Object))
-    })
-
 
     let domFixture
 
@@ -143,11 +218,20 @@ describe("Play Form", function () {
         domFixture.remove()
     }
 
-    function renderApp(alwaysInvalidRequest) {
+    function renderApp(requests) {
+        requests.getHistory = requests.getHistory || function(){}
+
         ReactDOM.render(
-            <PlayForm requests={alwaysInvalidRequest}/>,
+            <App requests={requests}/>,
             domFixture
         )
+    }
+
+    function changeInput(name, value) {
+        let input = document.querySelector(`[name='${name}']`)
+        input.value = value
+        ReactTestUtils.Simulate.change(input)
+
     }
 
     function page() {
