@@ -2,11 +2,18 @@ const {Requests, Round} = require("../src/rps")
 const FakeRoundRepo = require("./FakeRoundRepo")
 
 describe("history", function () {
+    let repo, requests
+
+    beforeEach(function () {
+        repo = new FakeRoundRepo()
+        requests = new Requests(repo)
+    })
+
     describe("when no rounds have been played", function () {
         it("tells the observer there are no rounds", function () {
             let observer = jasmine.createSpyObj("observer", ["noRounds"])
 
-            new Requests(new FakeRoundRepo()).getHistory(observer)
+            requests.getHistory(observer)
 
             expect(observer.noRounds).toHaveBeenCalled()
         })
@@ -15,9 +22,6 @@ describe("history", function () {
     describe("when rounds have been played", function () {
         it("then it sends the rounds to the observer", function () {
             let playRoundObserver = { tie(){ }, invalid(){ }, p1Wins(){ }, p2Wins(){ }}
-            let repo = new FakeRoundRepo()
-            let requests = new Requests(repo)
-
             let observer = jasmine.createSpyObj("observer", ["rounds"])
 
             requests.playRound("foo", "bar", playRoundObserver)
