@@ -8,7 +8,23 @@ class PlayForm extends React.Component {
     }
 
     submitForm() {
+        this.props.requests.play("p1 throw placeholder", "p2 throw placeholder", this)
+    }
+
+    tie(){
+        this.setState({message: "TIE"})
+    }
+
+    invalid(){
         this.setState({message: "INVALID"})
+    }
+
+    p1Wins(){
+        this.setState({message: "P1 Wins!"})
+    }
+
+    p2Wins(){
+        this.setState({message: "P2 Wins!"})
     }
 
     render() {
@@ -35,7 +51,7 @@ describe("Play Form", function () {
             expect(page()).toContain("INVALID")
         })
     })
-    
+
     describe("when the request is processed as 'tie'", function () {
         beforeEach(function () {
             let alwaysTieRequest = {
@@ -48,6 +64,36 @@ describe("Play Form", function () {
             expect(page()).not.toContain("TIE")
             submitPlayForm()
             expect(page()).toContain("TIE")
+        })
+    })
+
+    describe("when the request is processed as 'p1Wins'", function () {
+        beforeEach(function () {
+            let alwaysP1WinsRequest = {
+                play: (p1, p2, observer) => observer.p1Wins()
+            }
+            renderApp(alwaysP1WinsRequest)
+        })
+
+        it("should display P1 Wins!", function () {
+            expect(page()).not.toContain("P1 Wins!")
+            submitPlayForm()
+            expect(page()).toContain("P1 Wins!")
+        })
+    })
+
+    describe("when the request is processed as 'p2Wins'", function () {
+        beforeEach(function () {
+            let alwaysP2WinsRequest = {
+                play: (p1, p2, observer) => observer.p2Wins()
+            }
+            renderApp(alwaysP2WinsRequest)
+        })
+
+        it("should display P2 Wins!", function () {
+            expect(page()).not.toContain("P2 Wins!")
+            submitPlayForm()
+            expect(page()).toContain("P2 Wins!")
         })
     })
 
