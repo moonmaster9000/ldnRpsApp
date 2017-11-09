@@ -22,26 +22,66 @@ class PlayForm extends React.Component {
 
 describe("Play Form", function () {
     describe("when the request is processed as 'invalid'", function () {
-        it("should display INVALID", function () {
-            let domFixture = document.createElement("div")
-            document.body.appendChild(domFixture)
-
+        beforeEach(function () {
             let alwaysInvalidRequest = {
-                play: function (p1, p2, observer) {
-                    observer.invalid()
-                }
+                play: (p1, p2, observer) => observer.invalid()
             }
-
-            ReactDOM.render(
-                <PlayForm requests={alwaysInvalidRequest}/>,
-                domFixture
-            )
-
-            expect(domFixture.innerText).not.toContain("INVALID")
-            document.querySelector("button").click()
-            expect(domFixture.innerText).toContain("INVALID")
+            renderApp(alwaysInvalidRequest)
         })
 
-
+        it("should display INVALID", function () {
+            expect(page()).not.toContain("INVALID")
+            submitPlayForm()
+            expect(page()).toContain("INVALID")
+        })
     })
+    
+    describe("when the request is processed as 'tie'", function () {
+        beforeEach(function () {
+            let alwaysTieRequest = {
+                play: (p1, p2, observer) => observer.tie()
+            }
+            renderApp(alwaysTieRequest)
+        })
+
+        it("should display TIE", function () {
+            expect(page()).not.toContain("TIE")
+            submitPlayForm()
+            expect(page()).toContain("TIE")
+        })
+    })
+
+    let domFixture
+
+    function setupDOM() {
+        domFixture = document.createElement("div")
+        document.body.appendChild(domFixture)
+    }
+
+    beforeEach(function () {
+        setupDOM()
+    })
+
+    afterEach(function () {
+        cleanupDOM()
+    })
+
+    function cleanupDOM(){
+        domFixture.remove()
+    }
+
+    function renderApp(alwaysInvalidRequest) {
+        ReactDOM.render(
+            <PlayForm requests={alwaysInvalidRequest}/>,
+            domFixture
+        )
+    }
+
+    function page() {
+        return domFixture.innerText;
+    }
+
+    function submitPlayForm() {
+        document.querySelector("button").click()
+    }
 })
