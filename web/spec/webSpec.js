@@ -1,5 +1,6 @@
 const React = require("react")
 const ReactDOM = require("react-dom")
+const ReactTestUtils = require("react-dom/test-utils")
 
 class PlayForm extends React.Component {
     constructor() {
@@ -8,7 +9,7 @@ class PlayForm extends React.Component {
     }
 
     submitForm() {
-        this.props.requests.play("p1 throw placeholder", "p2 throw placeholder", this)
+        this.props.requests.play(this.state.p1Throw, this.state.p2Throw, this)
     }
 
     tie(){
@@ -27,9 +28,15 @@ class PlayForm extends React.Component {
         this.setState({message: "P2 Wins!"})
     }
 
+    inputChangedHandler(e){
+        this.setState({[e.target.name]: e.target.value})
+    }
+
     render() {
         return <div>
             {this.state.message}
+            <input name="p1Throw" onChange={this.inputChangedHandler.bind(this)}/>
+            <input name="p2Throw" onChange={this.inputChangedHandler.bind(this)}/>
             <button onClick={this.submitForm.bind(this)}>PLAY</button>
         </div>
     }
@@ -96,6 +103,26 @@ describe("Play Form", function () {
             expect(page()).toContain("P2 Wins!")
         })
     })
+
+    function changeInput(name, value) {
+        let input = document.querySelector(`[name='${name}']`)
+        input.value = value
+        ReactTestUtils.Simulate.change(input)
+
+    }
+
+    it("sends the user's input to the play request", function () {
+        let playSpy = jasmine.createSpy("playSpy")
+
+        renderApp({play: playSpy})
+
+        changeInput("p1Throw", "foo")
+        changeInput("p2Throw", "bar")
+
+        submitPlayForm()
+        expect(playSpy).toHaveBeenCalledWith("foo", "bar", jasmine.any(Object))
+    })
+
 
     let domFixture
 
